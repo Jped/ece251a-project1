@@ -48,8 +48,6 @@
 // Pin Definitions
 //-----------------------------------------------------------------------------
 SI_SBIT (DISP_EN, SFR_P3, 4);          // Display Enable
-SI_SBIT (S1, SFR_P0, 2);
-SI_SBIT (S2, SFR_P0, 3);
 #define DISP_BC_DRIVEN   0             // 0 = Board Controller drives display
 #define DISP_EFM8_DRIVEN 1             // 1 = EFM8 drives display
 //-----------------------------------------------------------------------------
@@ -66,9 +64,5 @@ void main (void)
 
 
    while (1) {
-	   //if ((P0_B2==1) && (P0_B3==1)){
-	   if ((S1==1) && (S2==1)){
-		   EIE1 |= 0x02;
-	   }
    }                        // Spin forever
 }
