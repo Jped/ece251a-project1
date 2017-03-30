@@ -13,25 +13,18 @@
 //-----------------------------------------------------------------------------
 // Global VARIABLES
 //-----------------------------------------------------------------------------
-int LEDCOUNT = 0;
-int maxLen=10;
-int commands[8][6]={  //opcode, opcode, digit, digit, digit, digit
-		   {1,1,0,0,0,0},
-		   {0,1,0,0,0,1},
-		   {0,1,0,0,1,1},
-		   {0,1,0,0,0,1},
-		   {0,0,0,1,0,0},
-		   {1,0,0,0,0,1},
-		   {1,1,0,0,0,0},
-		   {1,1,0,0,0,0}
-		};
+int LEDCOUNT = 0; //used to set some frequency in a "hacky" manner, resets at maxLen
+int maxLen=10; //Highest LEDCOUNT can reach
+//00: and 11: clear 10: or 01: add
+int commands[2][6]={  //opcode, opcode, digit, digit, digit, digit
+		   {1,1,0,0,0,0}, //this resets the ALU
+		   {0,1,1,1,1,1} //This subtracts one
+};
+
 int PC		=	0;
 //-----------------------------------------------------------------------------
 // Global CONSTANTS
 //-----------------------------------------------------------------------------
-//SI_SBIT(LED0, SFR_P1, 7);                  // P1.4 LED0
-//SI_SBIT(LED1, SFR_P1, 5);                  // P1.5 LED1
-//SI_SBIT(LED2, SFR_P1, 6);                  // P1.6 LED2
 
 //-----------------------------------------------------------------------------
 // TIMER2_ISR
@@ -46,64 +39,40 @@ int PC		=	0;
 //-----------------------------------------------------------------------------
 
 
-SI_INTERRUPT (TIMER2_ISR, TIMER2_IRQn)
+SI_INTERRUPT (TIMER2_ISR, TIMER2_IRQn) //This is the interrupt for the timer, code here is run on every clock cycle.
 {
-
-
 	TMR2CN0_TF2H = 0;                  // Clear Timer2 interrupt flag
-	if (LEDCOUNT==0){
-		P0_B7=0;
-		if (PC<=7){
-			P0_B0=commands[PC][0];
-		    P0_B1=commands[PC][1];
-			P0_B2=commands[PC][2];
-		    P0_B3=commands[PC][3];
-		    P0_B4=commands[PC][4];
-			P0_B6=commands[PC][5];
-			PC++;
+	if (LEDCOUNT==0){ //This emulates frequency
+		P0_B7=0; //This is the clock pin
+		if (PC<=16 && PC>0){ //subtracting occurs most of the time
+			P0_B0=commands[1][0]; //first digit of opcode
+		    P0_B1=commands[1][1]; //second digit of opcode
+			P0_B2=commands[1][2]; //first digit of number
+		    P0_B3=commands[1][3]; //second digit
+		    P0_B4=commands[1][4]; //third digit
+			P0_B6=commands[1][5]; //fourth digit
+			PC++; //counts up steps
+		}
+		else { //this is where resetting occurs
+			P0_B0=commands[0][0]; //first digit of opcode
+		    P0_B1=commands[0][1]; //2nd
+			P0_B2=commands[0][2]; //first digit of number
+		    P0_B3=commands[0][3]; //2nd
+		    P0_B4=commands[0][4]; //3rd
+			P0_B6=commands[0][5]; //4th
+			PC++; //counts up steps
 		}
 	}
 	else if (LEDCOUNT==maxLen/2){
-		P0_B7=1;
+		P0_B7=1; //Clock pin
 	}
 
 	if (LEDCOUNT>maxLen){
-		LEDCOUNT=0;
+		LEDCOUNT=0; //resets at max "frequency"
 	}
 	else {
-		LEDCOUNT++;
+		LEDCOUNT++; //continues onwards in terms of "frequency"
 	}
-
-//	switch (LEDCOUNT)
-//	{
-//		case 0:
-//		   P0_B7=0;
-//		   break;
-//		case maxLen/2:
-//		   P0_B7 = 1;
-//		   break;
-//	}
-//
-//	if (LEDCOUNT <= maxLen) LEDCOUNT++;
-//	else LEDCOUNT = 0;
-}
-
-SI_INTERRUPT (PMATCH_ISR, PMATCH_IRQn){
-
-	if (P0_B2==0){
-		maxLen+=2;
-		if (maxLen>160){
-			maxLen=160;
-		}
-	}
-	if (P0_B3==0){
-		maxLen-=2;
-		if (maxLen<0){
-			maxLen=0;
-		}
-	}
-	SFRPAGE=LEGACY_PAGE;
-	EIE1 &= ~0x02;
 }
 
 

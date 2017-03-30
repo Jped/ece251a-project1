@@ -1,4 +1,4 @@
-C51 COMPILER V9.53.0.0   INTERRUPTS                                                        03/26/2017 13:32:14 PAGE 1   
+C51 COMPILER V9.53.0.0   INTERRUPTS                                                        03/30/2017 16:29:28 PAGE 1   
 
 
 C51 COMPILER V9.53.0.0, COMPILATION OF MODULE INTERRUPTS
@@ -27,112 +27,80 @@ line level    source
   13          //-----------------------------------------------------------------------------
   14          // Global VARIABLES
   15          //-----------------------------------------------------------------------------
-  16          int LEDCOUNT = 0;
-  17          int maxLen=10;
-  18          int commands[8][6]={  //opcode, opcode, digit, digit, digit, digit
-  19                             {1,1,0,0,0,0},
-  20                             {0,1,0,0,0,1},
-  21                             {0,1,0,0,1,1},
-  22                             {0,1,0,0,0,1},
-  23                             {0,0,0,1,0,0},
-  24                             {1,0,0,0,0,1},
-  25                             {1,1,0,0,0,0},
-  26                             {1,1,0,0,0,0}
-  27                          };
-  28          int PC          =       0;
+  16          int LEDCOUNT = 0; //used to set some frequency in a "hacky" manner, resets at maxLen
+  17          int maxLen=10; //Highest LEDCOUNT can reach
+  18          //00: and 11: clear 10: or 01: add
+  19          int commands[2][6]={  //opcode, opcode, digit, digit, digit, digit
+  20                             {1,1,0,0,0,0}, //this resets the ALU
+  21                             {0,1,1,1,1,1} //This subtracts one
+  22          };
+  23          
+  24          int PC          =       0;
+  25          //-----------------------------------------------------------------------------
+  26          // Global CONSTANTS
+  27          //-----------------------------------------------------------------------------
+  28          
   29          //-----------------------------------------------------------------------------
-  30          // Global CONSTANTS
+  30          // TIMER2_ISR
   31          //-----------------------------------------------------------------------------
-  32          //SI_SBIT(LED0, SFR_P1, 7);                  // P1.4 LED0
-  33          //SI_SBIT(LED1, SFR_P1, 5);                  // P1.5 LED1
-  34          //SI_SBIT(LED2, SFR_P1, 6);                  // P1.6 LED2
-  35          
-  36          //-----------------------------------------------------------------------------
-  37          // TIMER2_ISR
-  38          //-----------------------------------------------------------------------------
-  39          //
-  40          // TIMER2 ISR Content goes here. Remember to clear flag bits:
-  41          // TMR2CN::TF2H (Timer # High Byte Overflow Flag)
-  42          // TMR2CN::TF2L (Timer # Low Byte Overflow Flag)
-  43          //
-  44          // This routine changes the state of the LED whenever Timer2 overflows.
-  45          //
-  46          //-----------------------------------------------------------------------------
-  47          
-  48          
-  49          SI_INTERRUPT (TIMER2_ISR, TIMER2_IRQn)
-  50          {
-  51   1      
-C51 COMPILER V9.53.0.0   INTERRUPTS                                                        03/26/2017 13:32:14 PAGE 2   
+  32          //
+  33          // TIMER2 ISR Content goes here. Remember to clear flag bits:
+  34          // TMR2CN::TF2H (Timer # High Byte Overflow Flag)
+  35          // TMR2CN::TF2L (Timer # Low Byte Overflow Flag)
+  36          //
+  37          // This routine changes the state of the LED whenever Timer2 overflows.
+  38          //
+  39          //-----------------------------------------------------------------------------
+  40          
+  41          
+  42          SI_INTERRUPT (TIMER2_ISR, TIMER2_IRQn) //This is the interrupt for the timer, code here is run on every cl
+             -ock cycle.
+  43          {
+  44   1              TMR2CN0_TF2H = 0;                  // Clear Timer2 interrupt flag
+  45   1              if (LEDCOUNT==0){ //This emulates frequency
+  46   2                      P0_B7=0; //This is the clock pin
+  47   2                      if (PC<=16 && PC>0){ //subtracting occurs most of the time
+  48   3                              P0_B0=commands[1][0]; //first digit of opcode
+  49   3                          P0_B1=commands[1][1]; //second digit of opcode
+  50   3                              P0_B2=commands[1][2]; //first digit of number
+C51 COMPILER V9.53.0.0   INTERRUPTS                                                        03/30/2017 16:29:28 PAGE 2   
 
-  52   1      
-  53   1              TMR2CN0_TF2H = 0;                  // Clear Timer2 interrupt flag
-  54   1              if (LEDCOUNT==0){
-  55   2                      P0_B7=0;
-  56   2                      if (PC<=7){
-  57   3                              P0_B0=commands[PC][0];
-  58   3                          P0_B1=commands[PC][1];
-  59   3                              P0_B2=commands[PC][2];
-  60   3                          P0_B3=commands[PC][3];
-  61   3                          P0_B4=commands[PC][4];
-  62   3                              P0_B6=commands[PC][5];
-  63   3                              PC++;
+  51   3                          P0_B3=commands[1][3]; //second digit
+  52   3                          P0_B4=commands[1][4]; //third digit
+  53   3                              P0_B6=commands[1][5]; //fourth digit
+  54   3                              PC++; //counts up steps
+  55   3                      }
+  56   2                      else { //this is where resetting occurs
+  57   3                              P0_B0=commands[0][0]; //first digit of opcode
+  58   3                          P0_B1=commands[0][1]; //2nd
+  59   3                              P0_B2=commands[0][2]; //first digit of number
+  60   3                          P0_B3=commands[0][3]; //2nd
+  61   3                          P0_B4=commands[0][4]; //3rd
+  62   3                              P0_B6=commands[0][5]; //4th
+  63   3                              PC++; //counts up steps
   64   3                      }
   65   2              }
   66   1              else if (LEDCOUNT==maxLen/2){
-  67   2                      P0_B7=1;
+  67   2                      P0_B7=1; //Clock pin
   68   2              }
   69   1      
   70   1              if (LEDCOUNT>maxLen){
-  71   2                      LEDCOUNT=0;
+  71   2                      LEDCOUNT=0; //resets at max "frequency"
   72   2              }
   73   1              else {
-  74   2                      LEDCOUNT++;
+  74   2                      LEDCOUNT++; //continues onwards in terms of "frequency"
   75   2              }
-  76   1      
-  77   1      //      switch (LEDCOUNT)
-  78   1      //      {
-  79   1      //              case 0:
-  80   1      //                 P0_B7=0;
-  81   1      //                 break;
-  82   1      //              case maxLen/2:
-  83   1      //                 P0_B7 = 1;
-  84   1      //                 break;
-  85   1      //      }
-  86   1      //
-  87   1      //      if (LEDCOUNT <= maxLen) LEDCOUNT++;
-  88   1      //      else LEDCOUNT = 0;
-  89   1      }
-  90          
-  91          SI_INTERRUPT (PMATCH_ISR, PMATCH_IRQn){
-  92   1      
-  93   1              if (P0_B2==0){
-  94   2                      maxLen+=2;
-  95   2                      if (maxLen>160){
-  96   3                              maxLen=160;
-  97   3                      }
-  98   2              }
-  99   1              if (P0_B3==0){
- 100   2                      maxLen-=2;
- 101   2                      if (maxLen<0){
- 102   3                              maxLen=0;
- 103   3                      }
- 104   2              }
- 105   1              SFRPAGE=LEGACY_PAGE;
- 106   1              EIE1 &= ~0x02;
- 107   1      }
- 108          
- 109          
+  76   1      }
+  77          
+  78          
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    315    ----
+   CODE SIZE        =    247    ----
    CONSTANT SIZE    =   ----    ----
-C51 COMPILER V9.53.0.0   INTERRUPTS                                                        03/26/2017 13:32:14 PAGE 3   
-
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =    102    ----
+   DATA SIZE        =     30    ----
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
    EDATA SIZE       =   ----    ----
