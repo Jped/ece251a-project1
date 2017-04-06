@@ -1,0 +1,99 @@
+C51 COMPILER V9.53.0.0   MAIN                                                              04/06/2017 01:17:14 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\src\main.OBJ
+COMPILER INVOKED BY: c:\SiliconLabs\SimplicityStudio\v4\developer\toolchains\keil_8051\9.53\BIN\C51.exe C:\Users\pedoe\S
+                    -implicityStudio\v4_workspace\EFM8BB3_PowerModes_2_2\src\main.c OMF2 SMALL DEBUG OBJECTEXTEND ROM(LARGE) WARNINGLEVEL(2) 
+                    -FLOATFUZZY(3) OPTIMIZE(8,SPEED) DEFINE(DEBUG=1) INTVECTOR(0X0000) INTPROMOTE INCDIR(C:\Users\pedoe\SimplicityStudio\v4_w
+                    -orkspace\EFM8BB3_PowerModes_2_2\inc;C:\Users\pedoe\SimplicityStudio\v4_workspace\EFM8BB3_PowerModes_2_2\inc\config;C:\Us
+                    -ers\pedoe\SimplicityStudio\v4_workspace\EFM8BB3_PowerModes_2_2\inc\graphics;C:/SiliconLabs/SimplicityStudio/v4/developer
+                    -/sdks/8051/v4.0.3//kits/common/drivers/efm8_memory_lcd/inc;C:/SiliconLabs/SimplicityStudio/v4/developer/sdks/8051/v4.0.3
+                    -//kits/common/drivers/efm8_memory_lcd/inc/graphics;C:/SiliconLabs/SimplicityStudio/v4/developer/sdks/8051/v4.0.3//kits/c
+                    -ommon/drivers/efm8_memory_lcd/inc/config;C:/SiliconLabs/SimplicityStudio/v4/developer/sdks/8051/v4.0.3//kits/common/bsp;
+                    -C:/SiliconLabs/SimplicityStudio/v4/developer/sdks/8051/v4.0.3//kits/EFM8BB3_SLSTK2022A/config;C:/SiliconLabs/SimplicityS
+                    -tudio/v4/developer/sdks/8051/v4.0.3//Device/shared/si8051base;C:/SiliconLabs/SimplicityStudio/v4/developer/sdks/8051/v4.
+                    -0.3//Device/EFM8BB3/inc;C:/SiliconLabs/SimplicityStudio/v4/developer/sdks/8051/v4.0.3//Device/EFM8BB3/peripheral_driver/
+                    -inc) PRINT(.\src\main.lst) COND PAGEWIDTH(120) PAGELENGTH(65) OBJECT(.\src\main.OBJ)
+
+line level    source
+
+   1          
+   2          #include "bsp.h"
+   3          #include "pwr.h"
+   4          
+   5          #include "draw.h"
+   6          #include "tick.h"
+   7          #include "InitDevice.h"
+   8          #include <SI_EFM8BB3_Register_Enums.h>
+   9          SI_SBIT (LED1, SFR_P1, 3);
+  10          int x = 10;
+  11          SI_INTERRUPT (TIMER0_ISR, TIMER0_IRQn)
+  12          {
+  13   1              LED1 = !LED1;
+  14   1              writeALot("hello");
+  15   1              //DISP_Init();
+  16   1              //DrawScreenText("Pens MAN7", 30);
+  17   1              TCON_TR0 = 0;                       // Stop Timer 0
+  18   1              TH0 = 00111000;           // Reset Timer0 High register
+  19   1          TL0 = 10011110;            // Reset Timer0 Low register
+  20   1          TCON_TR0 = 1;
+  21   1          //DISP_Init();
+  22   1          //DrawScreenText("Pens MAN", 30);
+  23   1              x = x + 10;
+  24   1      }
+  25          void writeALot(char * z){
+  26   1              //LED1 = !LED1;
+  27   1              DISP_Init();
+  28   1      //      DrawScreenText("Two Deviations Tech", 0);
+  29   1      //      DrawScreenText(z,10);
+  30   1      }
+*** WARNING C280 IN LINE 25 OF C:\Users\pedoe\SimplicityStudio\v4_workspace\EFM8BB3_PowerModes_2_2\src\main.c: 'z': unre
+             -ferenced local variable
+  31          
+  32          void main(void)
+  33          {
+  34   1        // Initialize the device
+  35   1        enter_DefaultMode_from_RESET();
+  36   1      
+  37   1        // Safety trap. Press either push button while resetting the device to
+  38   1        // stall the application here.
+  39   1      
+  40   1        IE_EA = 1;
+  41   1        //DISP_Init();
+  42   1        //DrawScreenText("Two Deviations Tech", 0);
+  43   1        //DrawScreenText("Pens MAN", 10);
+C51 COMPILER V9.53.0.0   MAIN                                                              04/06/2017 01:17:14 PAGE 2   
+
+  44   1        // Mainloop
+  45   1        //writeALot("hey");
+  46   1        while (true)
+  47   1        {
+  48   2              //DrawScreenText("Pens MAN", x);
+  49   2              //x+=10;
+  50   2          // Halt the display tick and wait for display updates to finish
+  51   2          TMR3CN0 &= ~TMR3CN0_TR3__BMASK;
+  52   2          while (BSP_DISP_CS == SPI_CS_ASSERT_LVL);
+  53   2          TMR3CN0 |= TMR3CN0_TR3__BMASK;
+  54   2        }
+  55   1      }
+  56          
+  57          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    116    ----
+   CONSTANT SIZE    =      6    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)
